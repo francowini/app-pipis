@@ -37,6 +37,8 @@ export default function Page() {
   const [shake, setShake] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [perdedor, setPerdedor] = useState<0 | 1 | null>(null);
+  const [palabrasPosibles, setPalabrasPosibles] = useState<string[]>([]);
+  const [cargandoPosibles, setCargandoPosibles] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -52,8 +54,20 @@ export default function Page() {
   ];
   const ganador = perdedor === null ? null : ((1 - perdedor) as 0 | 1);
 
-  function empezar() {
-    if (letras.length !== 3) return;
+  async function empezar() {
+    if (letras.length !== 3 || cargandoPosibles) return;
+    setCargandoPosibles(true);
+    try {
+      const res = await fetch(
+        `/api/palabras?letras=${encodeURIComponent(letras)}`
+      );
+      const data: { palabras: string[]; total: number } = await res.json();
+      setPalabrasPosibles(data.palabras ?? []);
+    } catch {
+      setPalabrasPosibles([]);
+    } finally {
+      setCargandoPosibles(false);
+    }
     setPalabras([]);
     setTurno(0);
     setInput("");
@@ -126,6 +140,8 @@ export default function Page() {
 
   const palabrasJugador0 = palabras.filter((p) => p.jugador === 0);
   const palabrasJugador1 = palabras.filter((p) => p.jugador === 1);
+  const dichas = new Set(palabras.map((p) => p.palabra));
+  const faltantes = palabrasPosibles.filter((p) => !dichas.has(p));
 
   return (
     <main className="flex-1 flex flex-col items-center px-4 py-8 sm:py-14">
@@ -195,10 +211,10 @@ export default function Page() {
 
           <button
             onClick={empezar}
-            disabled={letras.length !== 3}
+            disabled={letras.length !== 3 || cargandoPosibles}
             className="bg-coral hover:bg-coral-dark disabled:bg-line disabled:text-mute disabled:cursor-not-allowed text-white text-lg font-semibold rounded-xl py-4 transition-colors"
           >
-            Empezar partida
+            {cargandoPosibles ? "Cargando…" : "Empezar partida"}
           </button>
         </div>
       )}
@@ -212,6 +228,14 @@ export default function Page() {
             <h1 className="font-[family-name:var(--font-display)] text-7xl sm:text-9xl font-black tracking-tight text-coral">
               {letras.toUpperCase()}
             </h1>
+            <p className="mt-3 text-mute text-sm">
+              <span className="font-semibold text-ink">
+                {palabrasPosibles.length.toLocaleString("es-AR")}
+              </span>{" "}
+              {palabrasPosibles.length === 1
+                ? "palabra posible"
+                : "palabras posibles"}
+            </p>
           </header>
 
           <div className="text-center">
@@ -355,6 +379,33 @@ export default function Page() {
               );
             })}
           </section>
+
+          {palabrasPosibles.length > 0 && (
+            <section className="bg-white border border-line rounded-2xl p-5">
+              <div className="flex items-baseline justify-between mb-3 gap-3 flex-wrap">
+                <h2 className="font-[family-name:var(--font-display)] text-lg font-bold">
+                  Las que faltaron
+                </h2>
+                <span className="text-sm text-mute">
+                  {faltantes.length.toLocaleString("es-AR")} de{" "}
+                  {palabrasPosibles.length.toLocaleString("es-AR")}
+                </span>
+              </div>
+              {faltantes.length === 0 ? (
+                <p className="text-mute text-sm italic">
+                  No quedó ninguna sin decir.
+                </p>
+              ) : (
+                <ul className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 max-h-80 overflow-y-auto text-sm">
+                  {faltantes.map((p) => (
+                    <li key={p} className="text-mute">
+                      {capitalizar(p)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3">
             <button

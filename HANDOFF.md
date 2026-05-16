@@ -24,6 +24,7 @@ App web para 2 jugadores (sin red, todo local en una pantalla compartida):
 | Diccionario | `an-array-of-spanish-words` v2.0.0 | Pesa ~6 MB. Se carga **una sola vez** a nivel módulo en `lib/diccionario.ts` (Set en memoria) para que el serverless function lo cachee entre requests. |
 | Estado | `useState` en un único client component | Sin DB, sin auth, sin persistencia entre sesiones. Cerrar la pestaña pierde la partida — es intencional. |
 | Validación | Endpoint **POST `/api/validar`** | El cliente manda `{ palabra, letras, palabrasUsadas }`, el servidor responde `{ valida: boolean, motivo: string }`. La lista de palabras usadas vive en el cliente y viaja en cada request — el servidor es stateless. |
+| Conteo y listado | Endpoint **GET `/api/palabras?letras=xxx`** | Devuelve `{ palabras: string[], total: number }` con todas las palabras del diccionario que arrancan con esas 3 letras. Se fetchea **una vez** al apretar "Empezar partida" y queda en estado para mostrar el total durante el juego y las faltantes en el fin. |
 | Tipos | `lib/an-array-of-spanish-words.d.ts` declara el módulo | El paquete no trae `.d.ts`. |
 
 ## Estructura de archivos
@@ -32,6 +33,7 @@ App web para 2 jugadores (sin red, todo local en una pantalla compartida):
 palabras-cruzadas/
 ├── app/
 │   ├── api/validar/route.ts   # POST endpoint que valida cada palabra
+│   ├── api/palabras/route.ts  # GET ?letras=xxx → todas las palabras del diccionario con ese prefijo
 │   ├── globals.css            # Tailwind v4 + @theme tokens + animaciones
 │   ├── layout.tsx             # Fraunces (display) + Space Grotesk (sans)
 │   └── page.tsx               # Juego completo: client component con 3 estados
@@ -58,8 +60,8 @@ palabras-cruzadas/
 Un único `useState<Estado>` controla qué se renderiza:
 
 1. **`setup`** — inputs de nombres + 3 letras + botón "Letras random" (elige de `COMBINACIONES_COMUNES`) + "Empezar partida".
-2. **`jugando`** — header con las 3 letras gigantes en coral, "Turno de [nombre]", input con autofocus, mensaje de error en rojo si la palabra es inválida (NO termina la partida — el jugador puede reintentar), botón "Me rindo", y dos columnas con las palabras dichas por cada jugador.
-3. **`fin`** — "¡Ganó [nombre]!", stats (palabras de cada jugador y total), lista completa, botones "Revancha" (mantiene letras y nombres, vacía palabras) y "Nueva partida" (vuelve a `setup`).
+2. **`jugando`** — header con las 3 letras gigantes en coral + contador "N palabras posibles" debajo, "Turno de [nombre]", input con autofocus, mensaje de error en rojo si la palabra es inválida (NO termina la partida — el jugador puede reintentar), botón "Me rindo", y dos columnas con las palabras dichas por cada jugador.
+3. **`fin`** — "¡Ganó [nombre]!", stats (palabras de cada jugador y total), lista completa, sección "Las que faltaron" en grilla scrolleable (diferencia entre `palabrasPosibles` y las dichas), botones "Revancha" (mantiene letras, nombres y `palabrasPosibles`, vacía palabras dichas) y "Nueva partida" (vuelve a `setup`).
 
 El input mantiene foco después de cada intento (válido o no) vía `inputRef` + `useEffect` que se reactiva en cada cambio de `turno`.
 
