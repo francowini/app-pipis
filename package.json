@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "limpiar-diccionario": "node scripts/limpiar-diccionario.mjs"
+    "limpiar-diccionario": "node scripts/limpiar-diccionario.mjs",
+    "generar-comienzos": "node scripts/generar-comienzos.mjs"
   },
   "dependencies": {
     "next": "16.2.6",

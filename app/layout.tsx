@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
+// Fraunces como variable font con sus ejes expresivos habilitados: WONK
+// (formas levemente excéntricas, 0–1), SOFT (suavidad de uniones, 0–100) y
+// opsz (optical size). Los animamos vía @property en globals.css.
 const fraunces = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["600", "700", "900"],
+  axes: ["opsz", "SOFT", "WONK"],
 });
 
 const spaceGrotesk = Space_Grotesk({

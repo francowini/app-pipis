@@ -2,17 +2,45 @@
 
 @theme {
   --color-cream: oklch(0.972 0.014 78);
+  --color-cream-deep: oklch(0.952 0.018 78);
   --color-ink: oklch(0.205 0.008 60);
   --color-coral: oklch(0.708 0.180 33);
   --color-coral-dark: oklch(0.622 0.193 33);
   --color-coral-ink: oklch(0.460 0.155 33);
   --color-coral-soft: oklch(0.963 0.020 35);
+  --color-coral-glow: oklch(0.780 0.150 33);
   --color-mute: oklch(0.500 0.006 78);
   --color-mute-ink: oklch(0.380 0.006 78);
   --color-line: oklch(0.890 0.022 80);
+  --color-line-soft: oklch(0.920 0.014 80);
 
   --font-display: var(--font-display), "Fraunces", serif;
   --font-sans: var(--font-sans), "Space Grotesk", system-ui, sans-serif;
+}
+
+/* Axes variables de Fraunces animados via @property: el navegador puede
+   interpolar entre valores, así que cualquier @keyframes que toque --wonk o
+   --soft hace que el tipo cambie de forma de verdad, no solo escala/color. */
+@property --wonk {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --soft {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 30;
+}
+@property --opsz {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 72;
+}
+
+:root {
+  --wonk: 0;
+  --soft: 30;
+  --opsz: 72;
 }
 
 body {
@@ -26,6 +54,258 @@ body {
   color: var(--color-cream);
 }
 
+/* ------------------------------ Atelier bg ------------------------------- */
+
+.atelier {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse at top,
+      var(--color-cream) 0%,
+      var(--color-cream-deep) 70%,
+      var(--color-cream-deep) 100%
+    );
+}
+
+.atelier-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+
+.atelier-corpus {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.corpus-word {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variation-settings: "wonk" 0, "soft" 30;
+  color: var(--color-coral-ink);
+  opacity: 0.06;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  transition:
+    opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    font-variation-settings 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: -0.01em;
+  will-change: opacity, transform;
+  animation: corpus-drift var(--drift-dur, 28s) ease-in-out infinite alternate;
+  animation-delay: var(--drift-delay, 0s);
+}
+
+.corpus-word.dicha {
+  opacity: 0.42;
+  color: var(--color-coral);
+  font-variation-settings: "wonk" 1, "soft" 60;
+}
+
+@keyframes corpus-drift {
+  from {
+    transform: translate(-50%, -50%) translate(0, 0);
+  }
+  to {
+    transform: translate(-50%, -50%) translate(var(--drift-x, 6px), var(--drift-y, -8px));
+  }
+}
+
+/* ------------------------------ Tinta + letras --------------------------- */
+
+.tinta-prensa {
+  filter: url(#tinta-prensa);
+}
+
+.letras-gigantes {
+  font-variation-settings:
+    "wonk" var(--wonk),
+    "soft" var(--soft),
+    "opsz" 144;
+  animation: respiracion 9s ease-in-out infinite alternate;
+}
+
+@keyframes respiracion {
+  0% {
+    --wonk: 0;
+    --soft: 30;
+  }
+  50% {
+    --wonk: 0.7;
+    --soft: 90;
+  }
+  100% {
+    --wonk: 0.2;
+    --soft: 50;
+  }
+}
+
+.letras-gigantes.peak {
+  animation: peak-axes 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes peak-axes {
+  0% {
+    --wonk: 0;
+    --soft: 30;
+  }
+  35% {
+    --wonk: 1;
+    --soft: 100;
+  }
+  100% {
+    --wonk: 0.2;
+    --soft: 50;
+  }
+}
+
+/* ------------------------------ Ruleta ----------------------------------- */
+
+.reel {
+  --reel-cell-h: clamp(7rem, 22vw, 11rem);
+  position: relative;
+  width: clamp(4.5rem, 16vw, 8rem);
+  height: var(--reel-cell-h);
+  overflow: hidden;
+  border-radius: 1rem;
+  background: oklch(0.985 0.012 78);
+  box-shadow:
+    inset 0 0 0 1px oklch(0.880 0.020 80),
+    inset 0 14px 24px -20px oklch(0.205 0.008 60 / 0.16),
+    inset 0 -14px 24px -20px oklch(0.205 0.008 60 / 0.16);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-variation-settings: "wonk" 0, "soft" 40, "opsz" 144;
+  line-height: 1;
+  isolation: isolate;
+}
+
+.reel::before,
+.reel::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 32%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.reel::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    oklch(0.985 0.012 78) 0%,
+    oklch(0.985 0.012 78 / 0) 100%
+  );
+}
+
+.reel::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    oklch(0.985 0.012 78) 0%,
+    oklch(0.985 0.012 78 / 0) 100%
+  );
+}
+
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.reel-cell {
+  flex: 0 0 var(--reel-cell-h);
+  width: 100%;
+  height: var(--reel-cell-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
+  text-transform: uppercase;
+  font-size: clamp(3.5rem, 12vw, 6rem);
+}
+
+.reel.settled .reel-cell.is-target {
+  animation: ink-press 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ink-press {
+  0% {
+    --wonk: 0;
+    --soft: 30;
+    color: var(--color-ink);
+    transform: scale(1);
+  }
+  30% {
+    --wonk: 1;
+    --soft: 100;
+    color: var(--color-coral);
+    transform: scale(1.04);
+  }
+  100% {
+    --wonk: 0.2;
+    --soft: 50;
+    color: var(--color-coral-ink);
+    transform: scale(1);
+  }
+}
+
+.reel-indicator {
+  position: absolute;
+  inset-inline: -6px;
+  top: 50%;
+  height: 1px;
+  background: var(--color-coral);
+  opacity: 0.18;
+  z-index: 1;
+}
+
+.reel-indicator::before,
+.reel-indicator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  transform: translateY(-50%);
+}
+
+.reel-indicator::before {
+  left: -2px;
+}
+
+.reel-indicator::after {
+  right: -2px;
+}
+
+.btn-girar {
+  position: relative;
+  font-variation-settings: "wonk" var(--wonk), "soft" 50;
+  transition: font-variation-settings 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btn-girar:hover:not(:disabled) {
+  --wonk: 0.6;
+}
+
+/* ------------------------------ Errores / fades -------------------------- */
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-8px); }
@@ -35,19 +315,51 @@ body {
 }
 
 @keyframes fade-down {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+    --wonk: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    --wonk: 0.1;
+  }
 }
 
 @keyframes ink-stamp {
-  0% { opacity: 0; transform: scale(1.04); letter-spacing: 0.02em; }
-  60% { opacity: 1; }
-  100% { opacity: 1; transform: scale(1); letter-spacing: -0.04em; }
+  0% {
+    opacity: 0;
+    transform: scale(1.04);
+    letter-spacing: 0.02em;
+    --wonk: 1;
+    --soft: 100;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    letter-spacing: -0.04em;
+    --wonk: 0.2;
+    --soft: 50;
+  }
 }
 
 @keyframes turn-settle {
-  0% { transform: translateY(-6px); opacity: 0; filter: blur(2px); }
-  100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+    filter: blur(2px);
+    --wonk: 0.6;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+    filter: blur(0);
+    --wonk: 0;
+  }
 }
 
 @keyframes fade-out {
@@ -59,7 +371,8 @@ body {
 }
 
 .animate-fade-down {
-  animation: fade-down 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: fade-down 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  font-variation-settings: "wonk" var(--wonk), "soft" 50;
 }
 
 .animate-ink-stamp {
@@ -68,15 +381,54 @@ body {
 
 .animate-turn-settle {
   animation: turn-settle 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  font-variation-settings: "wonk" var(--wonk), "soft" 50;
 }
 
-.tinta-prensa {
-  filter: url(#tinta-prensa);
+/* ------------------------------ Ripple del input ------------------------- */
+
+.input-ripple {
+  position: relative;
+  isolation: isolate;
 }
+
+.input-ripple::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid var(--color-coral);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-ripple.fire::after {
+  animation: ripple-out 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ripple-out {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.4);
+    border-width: 2px;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(38);
+    border-width: 0.5px;
+  }
+}
+
+/* ------------------------------ View transitions ------------------------- */
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.35s;
+  animation-duration: 0.6s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -89,12 +441,61 @@ body {
   animation: fade-out 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+::view-transition-group(letras-gigantes) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(letras-gigantes) {
+  animation: dim-out 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::view-transition-new(letras-gigantes) {
+  animation: bloom-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes dim-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes bloom-in {
+  0% {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+/* Reduced motion: nada se rompe, todo queda quieto pero legible y editorial. */
+
 @media (prefers-reduced-motion: reduce) {
   .animate-shake,
   .animate-fade-down,
   .animate-ink-stamp,
-  .animate-turn-settle {
+  .animate-turn-settle,
+  .corpus-word,
+  .letras-gigantes,
+  .input-ripple::after,
+  .reel-strip,
+  .reel.settled .reel-cell.is-target {
     animation: none !important;
+    transition: none !important;
+  }
+  .corpus-word.dicha {
+    opacity: 0.42;
+    color: var(--color-coral);
+  }
+  .letras-gigantes {
+    font-variation-settings: "wonk" 0.4, "soft" 70, "opsz" 144;
+  }
+  .reel.settled .reel-cell.is-target {
+    color: var(--color-coral-ink);
   }
   .tinta-prensa {
     filter: none;
@@ -102,7 +503,10 @@ body {
   ::view-transition-old(root),
   ::view-transition-new(root),
   ::view-transition-group(word-flight),
-  ::view-transition-old(word-flight) {
+  ::view-transition-old(word-flight),
+  ::view-transition-group(letras-gigantes),
+  ::view-transition-old(letras-gigantes),
+  ::view-transition-new(letras-gigantes) {
     animation: none !important;
   }
 }
