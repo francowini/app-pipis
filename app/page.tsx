@@ -5,7 +5,7 @@ import { flushSync } from "react-dom";
 import Atelier from "@/components/Atelier";
 import Confetti from "@/components/Confetti";
 import { Ruleta, type RuletaHandle } from "@/components/Ruleta";
-import { sortearComienzo } from "@/lib/comienzos";
+import { comienzosPotables, sortearComienzo } from "@/lib/comienzos";
 
 type Estado = "setup" | "jugando" | "fin";
 
@@ -106,6 +106,18 @@ export default function Page() {
       };
     }, [palabras, palabrasPosibles]);
 
+  // Qué palabras renderiza el Atelier detrás. Nunca puede revelar las
+  // posibles durante `jugando` (eso era spoiler). En `jugando` mostramos los
+  // OTROS prefijos potables como textura editorial; en `fin` ya está fair
+  // mostrar el corpus porque la sección "Las que faltaron" lo revela igual.
+  const atelierPalabras = useMemo(() => {
+    if (estado === "setup") return [];
+    if (estado === "fin") return palabrasPosibles;
+    return comienzosPotables
+      .filter((c) => c.prefijo !== letras)
+      .map((c) => c.prefijo);
+  }, [estado, palabrasPosibles, letras]);
+
   async function sortearRuleta() {
     if (girando) return;
     setGirando(true);
@@ -156,13 +168,21 @@ export default function Page() {
   }
 
   function revancha() {
+    // Revancha = volver al setup con un sorteo nuevo pre-cargado para que la
+    // ruleta esté lista. El jugador puede re-sortear o pasar a "Elegir a mano"
+    // y después dispara "Empezar partida".
+    const next = sortearComienzo(sorteadasRef.current).prefijo;
+    sorteadasRef.current.add(next);
     const apply = () => {
+      setLetras(next);
+      ruletaRef.current?.setLetras(next);
       setPalabras([]);
+      setPalabrasPosibles([]);
       setTurno(0);
       setInput("");
       setError(null);
       setPerdedor(null);
-      setEstado("jugando");
+      setEstado("setup");
     };
     const vt = startVT();
     if (vt && !prefersReducedMotion()) {
@@ -277,7 +297,7 @@ export default function Page() {
   return (
     <>
       <Atelier
-        palabras={palabrasPosibles}
+        palabras={atelierPalabras}
         dichas={dichasSet}
         estado={estado}
       />

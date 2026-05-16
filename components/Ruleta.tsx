@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 
 export type RuletaHandle = {
   girar: (target: string) => Promise<void>;
@@ -131,21 +125,9 @@ export const Ruleta = forwardRef<RuletaHandle, Props>(function Ruleta(
     [],
   );
 
-  useEffect(() => {
-    const nt = (letras || "").toLowerCase().slice(0, 3).padEnd(3, "a").split("");
-    setStrips((current) => {
-      const same = current.every(
-        (col, i) => col[col.length - 1] === nt[i] && col.length === 1,
-      );
-      if (same) return current;
-      return [[nt[0]], [nt[1]], [nt[2]]];
-    });
-    setSettled([true, true, true]);
-    for (let i = 0; i < 3; i++) {
-      const strip = stripRefs.current[i];
-      if (strip) strip.style.transform = "translateY(0px)";
-    }
-  }, [letras]);
+  // El estado interno se sincroniza solo vía la API imperativa (girar /
+   // setLetras). El prop `letras` solo siembra el estado inicial; intentar
+   // auto-resync via useEffect competía con girar() y dejaba parpadeos.
 
   return (
     <div
