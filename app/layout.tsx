@@ -30,6 +30,30 @@ export default function RootLayout({
       className={`${fraunces.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          width="0"
+          height="0"
+          style={{ position: "absolute", pointerEvents: "none" }}
+        >
+          <filter id="tinta-prensa">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.018 0.026"
+              numOctaves="2"
+              seed="7"
+              result="noise"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              scale="1.6"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        </svg>
         {children}
       </body>
     </html>

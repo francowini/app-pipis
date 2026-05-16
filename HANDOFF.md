@@ -48,12 +48,24 @@ palabras-cruzadas/
 
 ### Diseño / paleta
 
-- Fondo crema (`#fdf6ec`), acentos coral (`#ff6b4a`), texto casi negro (`#1a1a1a`).
+- Fondo crema, acentos coral, texto casi negro — todos los tokens en **OKLCH** (no hex) en `globals.css @theme`.
+- Texto sobre crema usa `text-coral-ink` (más oscuro, AA-safe a 4.5:1); el coral brillante queda para fondos de CTA, bordes, letras gigantes y selección.
 - Tipografía display: **Fraunces** (números grandes, letras iniciales, títulos).
 - Tipografía sans: **Space Grotesk** (todo lo demás).
-- Animaciones (en `globals.css`): `shake` para input inválido, `fade-down` para palabras nuevas.
+- Animaciones (en `globals.css`): `shake` (input inválido), `fade-down` (palabras nuevas), `ink-stamp` (entrada de las letras gigantes), `turn-settle` (cambio de turno).
+- Capa "Tinta y prensa" (overdrive): SVG filter `#tinta-prensa` definido en `layout.tsx` (turbulence + displacementMap suave), aplicado a las 3 letras gigantes vía la clase `.tinta-prensa`. View Transitions API morfea el texto del input hacia la columna del jugador cuando se valida una palabra (`view-transition-name: word-flight`). Confeti tipográfico en `fin`: canvas 2D con física (gravedad/aire/asentamiento) donde cada partícula es una palabra dicha por el ganador en Fraunces.
+- Todas las animaciones nuevas respetan `prefers-reduced-motion: reduce` (fallback estático + filter desactivado + confeti se omite).
 - **Sin emojis en la UI** — decisión deliberada del diseño original.
-- Responsive: mobile pasa las dos columnas de palabras a una sola.
+- Responsive: mobile pasa las dos columnas de palabras a una sola; stats de fin usan `grid-cols-3` con texto reducido en mobile.
+
+### Accesibilidad
+
+- Mensaje de error tiene `role="alert"` — los lectores de pantalla lo anuncian al fallar una palabra.
+- Cambio de turno está en un contenedor `aria-live="polite"` — "Turno de X" se anuncia al cambiar.
+- Inputs y botones tienen `focus-visible:ring-2 focus-visible:ring-coral-ink focus-visible:ring-offset-2`, así el foco sigue siendo visible en High Contrast Mode.
+- Botón de "Empezar partida" / "Decir palabra" usan `aria-busy` mientras envían.
+- El input principal de palabra tiene `aria-label="Palabra"` (el placeholder no cuenta como label).
+- El input de letras acepta acentos (se quitan antes de guardar): se evita pérdida silenciosa de tipeo. Hint visible `Acentos se ignoran.` con `aria-describedby`.
 
 ### Estados del juego (`app/page.tsx`)
 
@@ -95,7 +107,7 @@ Lo que charlamos pero no hicimos todavía. Si el usuario pide alguna, ya está p
 - Timer por turno (configurable en setup, ej. 10s/20s/30s).
 - Modo difícil: prohibir palabras de menos de N letras o que terminen en plural.
 - Sugerir letras random sesgadas por estadísticas reales del diccionario en lugar de la lista hardcodeada `COMBINACIONES_COMUNES`.
-- Animaciones más ricas (confetti al ganar, transiciones entre pantallas).
+- Animaciones más ricas (confetti al ganar, transiciones entre pantallas). ✅ *Capa "Tinta y prensa" agregada en la 2da sesión: view-transition word-flight, ink-stamp en letras, turn-settle, y confeti tipográfico en `fin`.*
 - Modo oscuro respetando la paleta.
 - Soporte para más de 2 jugadores.
 - Persistencia opcional con `localStorage` para sobrevivir a un refresh accidental.
